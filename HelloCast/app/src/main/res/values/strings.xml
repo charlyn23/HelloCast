@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">HelloCast</string>
+    <string name="media_route_menu_title">Media Route</string>
+    <string name="error">Error</string>
+    <string name="oops">Oops</string>
+    <string name="ok">OK</string>
+    <string name="video_error_media_load_timeout">Media loading timed out</string>
+    <string name="video_error_server_unaccessible">Media server was not reachable</string>
+    <string name="video_error_unknown_error">Failed to load video</string>
+    <string name="transition_image">transition-image</string>
+    <string name="addToQueue">Add to Queue</string>
+    <string name="current_playlist">Playlist</string></resources>
