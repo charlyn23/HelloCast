@@ -1,13 +1,14 @@
 # HelloCast
 An MVP for using Google ChromeCast to cast video content. The feature will be added to the BF app. 
 
-1. User goes to BF Videos activity.
+<img width="957" alt="screen shot 2017-06-29 at 12 47 54 pm" src="https://user-images.githubusercontent.com/10068886/27699778-600c27d0-5cc9-11e7-9ec5-853bc79a7e61.png">
 
-![bfvideomain](https://user-images.githubusercontent.com/10068886/27694056-06711240-5cb9-11e7-839d-27b282ccfa12.png)
-Next, user selects a channel.
+<img width="960" alt="screen shot 2017-06-29 at 12 47 40 pm" src="https://user-images.githubusercontent.com/10068886/27699827-90faeb2e-5cc9-11e7-8ce9-5344baf7b5c3.png">
 
+<img width="957" alt="screen shot 2017-06-29 at 12 48 01 pm" src="https://user-images.githubusercontent.com/10068886/27699841-9f7606ac-5cc9-11e7-9a7d-c5c5ba12a0fb.png">
 
-![brchannelmain](https://user-images.githubusercontent.com/10068886/27693897-91c79a54-5cb8-11e7-8f09-4d6cb1be49cf.png)
-![hwmain](https://user-images.githubusercontent.com/10068886/27693710-2de7455c-5cb8-11e7-830a-b0705d9afcee.png)
+<img width="959" alt="screen shot 2017-06-29 at 12 48 15 pm" src="https://user-images.githubusercontent.com/10068886/27699865-b4859fee-5cc9-11e7-8097-d747b1499421.png">
 
-Each channel's landing page will feature the Cast button in the upper right corner, like the MVP. Channels appear in a listView of cards. A consideration is a playlist/queue option. This is indicated by the "add" icon on each video card, and the list icon in the menu.
+<img width="955" alt="screen shot 2017-06-29 at 12 48 07 pm" src="https://user-images.githubusercontent.com/10068886/27699880-c60fad04-5cc9-11e7-9c64-76d8931a86a3.png">
+
+<img width="955" alt="screen shot 2017-06-29 at 12 48 21 pm" src="https://user-images.githubusercontent.com/10068886/27699900-e15177a0-5cc9-11e7-80ef-d066fb164697.png">
