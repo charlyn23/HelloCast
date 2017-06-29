@@ -19,7 +19,7 @@
         android:textSize="20sp"
         android:layout_weight="0.07" />
 
-    <ImageButton
+    <ImageView
         android:id="@+id/addButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

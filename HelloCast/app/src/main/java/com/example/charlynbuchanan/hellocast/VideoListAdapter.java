@@ -40,13 +40,13 @@ public  class VideoListAdapter extends ArrayAdapter<MediaItem> implements View.O
     public void onClick(View view) {
         int position = (Integer) view.getTag();
         MediaItem currentMovie = getItem(position);
-        Toast.makeText(getContext(), currentMovie.getTitle(), Toast.LENGTH_SHORT).show();;
+        Toast.makeText(getContext(), currentMovie.getTitle(), Toast.LENGTH_SHORT).show();
     }
 
     private static class ViewHolder {
         TextView titleView;
         ImageView posterView;
-        ImageButton addButton;
+        ImageView addButton;
     }
 
     @NonNull
@@ -63,7 +63,7 @@ public  class VideoListAdapter extends ArrayAdapter<MediaItem> implements View.O
             convertView = inflater.inflate(R.layout.movie_row, parent, false);
             viewHolder.titleView = (TextView)convertView.findViewById(R.id.titleView);
             viewHolder.posterView = (ImageView)convertView.findViewById(R.id.imageView);
-            viewHolder.addButton = (ImageButton)convertView.findViewById(R.id.addButton);
+            viewHolder.addButton = (ImageView)convertView.findViewById(R.id.addButton);
 //            viewHolder.addButton.setOnClickListener(new View.OnClickListener() {
 //                @Override
 //                public void onClick(View view) {

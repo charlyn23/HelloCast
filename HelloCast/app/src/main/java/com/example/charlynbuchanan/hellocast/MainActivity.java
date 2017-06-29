@@ -3,6 +3,7 @@ package com.example.charlynbuchanan.hellocast;
 import android.app.LoaderManager;
 import android.content.Intent;
 import android.content.Loader;
+import android.net.Uri;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -13,13 +14,17 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.google.android.gms.cast.MediaInfo;
+import com.google.android.gms.cast.MediaMetadata;
 import com.google.android.gms.cast.framework.CastButtonFactory;
 import com.google.android.gms.cast.framework.CastContext;
 import com.google.android.gms.cast.framework.CastSession;
 import com.google.android.gms.cast.framework.Session;
 import com.google.android.gms.cast.framework.SessionManager;
 import com.google.android.gms.cast.framework.SessionManagerListener;
+import com.google.android.gms.cast.framework.media.RemoteMediaClient;
 import com.google.android.gms.cast.framework.media.widget.ExpandedControllerActivity;
+import com.google.android.gms.common.images.WebImage;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -98,9 +103,30 @@ public class MainActivity extends AppCompatActivity  {
         listView.setAdapter(adapter);
         AdapterView.OnItemClickListener listClick = new AdapterView.OnItemClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                Toast.makeText(getApplicationContext(), "This is where the media player was. \nCast this video by selecting the \ncast icon in the upper right corner.", Toast.LENGTH_LONG).show();
-                Log.d("ItemClick", "item clicked");
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+                MediaItem current = movies.get(position);
+                MediaMetadata movieMetadata = new MediaMetadata(MediaMetadata.MEDIA_TYPE_MOVIE);
+                movieMetadata.putString("title", current.getTitle());
+                movieMetadata.addImage(new WebImage((Uri.parse(current.getImageUrl()))));
+                movieMetadata.putString("videoUrl", current.getVideoUrl());
+                movieMetadata.putInt("duration", current.getDuration());
+
+                castSession = sessionManager.getCurrentCastSession();
+                if (castSession != null) {
+                    MediaInfo mediaInfo = new MediaInfo.Builder(current.getVideoUrl())
+                            .setStreamType(MediaInfo.STREAM_TYPE_BUFFERED)
+                            .setMetadata(movieMetadata)
+                            .setStreamDuration(current.getDuration() * 1000)
+                            .setContentType("videos/mp4")
+                            .build();
+                    RemoteMediaClient remoteMediaClient = castSession.getRemoteMediaClient();
+                    remoteMediaClient.load(mediaInfo);
+                }
+                else {
+                    Toast.makeText(getApplicationContext(), "Ths is where the media player was. \nCast this video by selecting the \ncast icon in the upper right corner.", Toast.LENGTH_LONG).show();
+                }
+
+
 
             }
         };
