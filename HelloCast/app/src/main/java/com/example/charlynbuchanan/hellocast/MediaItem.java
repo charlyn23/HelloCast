@@ -2,68 +2,103 @@ package com.example.charlynbuchanan.hellocast;
 
 import android.os.Bundle;
 
+import com.google.android.gms.cast.MediaInfo;
+
 /**
  * Created by charlynbuchanan on 6/28/17.
  */
 
 public class MediaItem {
 
-    private String title;
-    private String videoUrl;
-    private String imageUrl;
-    private int duration;
-    private String mimeType;
+    private final String title;
+    private final String videoUrl;
+    private final String imageUrl;
+    private final int duration;
+    private final String mimeType;
 
-    public String getMimeType() {
-        return mimeType;
+    private MediaItem(MediaItemBuilder mediaItemBuilder){
+        this.title = mediaItemBuilder.title;
+        this.videoUrl = mediaItemBuilder.videoUrl;
+        this.imageUrl = mediaItemBuilder.imageUrl;
+        this.duration = mediaItemBuilder.duration;
+        this.mimeType = mediaItemBuilder.mimeType;
     }
 
-    public void setMimeType(String mimeType) {
-        this.mimeType = mimeType;
-    }
-
-    public String getTitle() {
+    public String getTitle(){
         return title;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getVideoUrl() {
-        return videoUrl;
-    }
-
-    public void setVideoUrl(String videoUrl) {
-        this.videoUrl = videoUrl;
+    public String getVideoUrl(){
+         return videoUrl;
     }
 
     public String getImageUrl() {
         return imageUrl;
     }
 
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
-    }
-
-    public int getDuration() {
+    public int getDuration(){
         return duration;
     }
-
-    public void setDuration(int duration) {
-        this.duration = duration;
+    public String getMimeType(){
+        return mimeType;
     }
 
-    public static final MediaItem fromBundle(Bundle wrapper) {
-        if (null == wrapper) {
-            return null;
+    public MediaItem getMediaItem(){
+        return new MediaItem.MediaItemBuilder(title, videoUrl, imageUrl, duration, mimeType).build();
+    }
+
+
+//    public static final MediaItem fromBundle(Bundle wrapper) {
+//        if (null == wrapper) {
+//            return null;
+//        }
+//        MediaItem media = new MediaItem();
+//        media.setVideoUrl(wrapper.getString("videoUrl"));
+//        media.setTitle(wrapper.getString("title"));
+//        media.setImageUrl(wrapper.getString("imgUrl"));
+//        media.setDuration(wrapper.getInt("duration") * 1000);
+//        return media;
+//    }
+
+    public static class MediaItemBuilder {
+        private String title;
+        private  String videoUrl;
+        private  String imageUrl;
+        private  int duration;
+        private  String mimeType;
+
+        public MediaItemBuilder(String title, String videoUrl, String imageUrl, int duration, String mimeType){
+            this.title = title;
+            this.videoUrl = videoUrl;
+            this.imageUrl = imageUrl;
+            this.duration = duration;
+            this.mimeType = mimeType;
         }
-        MediaItem media = new MediaItem();
-        media.setVideoUrl(wrapper.getString("videoUrl"));
-        media.setTitle(wrapper.getString("title"));
-        media.setImageUrl(wrapper.getString("imgUrl"));
-        media.setDuration(wrapper.getInt("duration") * 1000);
-        return media;
+
+        public MediaItemBuilder title(String title){
+            this.title = title;
+            return this;
+        }
+
+        public MediaItemBuilder videoUrl(String videoUrl) {
+            this.videoUrl = videoUrl;
+            return this;
+        }
+
+        public MediaItemBuilder duration(int duration) {
+            this.duration = duration;
+            return this;
+        }
+        public MediaItemBuilder mimeType(String mimeType) {
+            this.mimeType = mimeType;
+            return this;
+        }
+
+        public MediaItem build(){
+            return new MediaItem(this);
+        }
     }
+
+
 }
 

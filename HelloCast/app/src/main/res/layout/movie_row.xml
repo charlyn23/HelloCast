@@ -7,8 +7,7 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="292dp"
-        android:clickable="true">
+        android:layout_height="292dp">
     <TextView
         android:id="@+id/titleView"
         android:layout_width="344dp"

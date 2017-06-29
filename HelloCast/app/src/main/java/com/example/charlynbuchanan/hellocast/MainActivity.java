@@ -24,7 +24,7 @@ import com.google.android.gms.cast.framework.media.widget.ExpandedControllerActi
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity  {
 
     private static String urlString = "https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/f.json";
 
@@ -34,56 +34,28 @@ public class MainActivity extends AppCompatActivity {
      */
     private CastSession castSession;
     private SessionManager sessionManager;
-    private final SessionManagerListener sessionManagerListener = new SessionManagerListenerImpl();
-    private class SessionManagerListenerImpl implements SessionManagerListener {
-        @Override
-        public void onSessionStarting(Session session) {}
+    MSessionManagerListner sessionManagerListener;
 
-        @Override
-        public void onSessionStarted(Session session, String sessionId) {
-            invalidateOptionsMenu();
-        }
-
-        @Override
-        public void onSessionStartFailed(Session session, int i) {}
-
-        @Override
-        public void onSessionEnding(Session session) {}
-
-        @Override
-        public void onSessionResumed(Session session, boolean wasSuspended) {
-            invalidateOptionsMenu();
-        }
-
-        @Override
-        public void onSessionResumeFailed(Session session, int i) {}
-
-        @Override
-        public void onSessionSuspended(Session session, int i) {}
-
-        @Override
-        public void onSessionEnded(Session session, int error) {
-            finish();
-        }
-        @Override
-        public void onSessionResuming(Session session, String s) {}
-    }
     private static ArrayList<MediaItem> movies = new ArrayList<>();
-    
 
-    @Override
-    protected void onResume() {
-        castSession = sessionManager.getCurrentCastSession();
-        sessionManager.addSessionManagerListener(sessionManagerListener);
-        super.onResume();
+    private class MSessionManagerListner extends SimpleSessionManagerListener {
+
+        @Override
+        public void onSessionStarted(Session session, String s) {
+            super.onSessionStarted(session, s);
+        }
+
+        @Override
+        public void onSessionEnded(Session session, int i) {
+            super.onSessionEnded(session, i);
+        }
+
+        @Override
+        public void onSessionResumed(Session session, boolean b) {
+            super.onSessionResumed(session, b);
+        }
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        sessionManager.removeSessionManagerListener(sessionManagerListener);
-        castSession = null;
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,7 +70,9 @@ public class MainActivity extends AppCompatActivity {
         CastOptionsProvider castOptionsProvider = new CastOptionsProvider();
         castOptionsProvider.getCastOptions(getApplicationContext());
 
-        //This part is weird. it's like the listView ceases to exist by line 135
+        sessionManagerListener = new MSessionManagerListner();
+
+
         final ListView listView = (ListView)findViewById(R.id.list);
         final VideoListAdapter adapter = new VideoListAdapter(MainActivity.this, R.layout.movie_row, new ArrayList<MediaItem>());
 
@@ -125,19 +99,13 @@ public class MainActivity extends AppCompatActivity {
         AdapterView.OnItemClickListener listClick = new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                Toast.makeText(getApplicationContext(), "Ths is where the media player was. \nCast this video by selecting the \ncast icon in the upper right corner.", Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), "This is where the media player was. \nCast this video by selecting the \ncast icon in the upper right corner.", Toast.LENGTH_LONG).show();
                 Log.d("ItemClick", "item clicked");
 
             }
         };
         listView.setOnItemClickListener(listClick);
         //This seems redundant and weird...
-
-
-
-
-
-
 
 //        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 //            @Override
@@ -175,9 +143,25 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+    @Override
+    protected void onResume() {
+        castSession = sessionManager.getCurrentCastSession();
+        sessionManager.addSessionManagerListener(sessionManagerListener);
+        super.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        sessionManager.removeSessionManagerListener(sessionManagerListener);
+        castSession = null;
+    }
+
     public void showExpandedController() {
         Intent intent = new Intent(this, ExpandedControllerActivity.class);
         startActivity(intent);
     }
+
+
 
 }

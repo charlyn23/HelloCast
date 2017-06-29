@@ -50,7 +50,7 @@
         <meta-data
             android:name=
                 "com.google.android.gms.cast.framework.OPTIONS_PROVIDER_CLASS_NAME"
-            android:value="com.example.charlynbuchanan.helloworld.CastOptionsProvider" />
+            android:value="com.example.charlynbuchanan.hellocast.CastOptionsProvider" />
     </application>
 
 </manifest>

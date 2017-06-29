@@ -88,7 +88,8 @@ public class VideoFetcher {
                     imageUrl = imageUrlPrefix + videoInfo.getString("image-480x270");
                     title = videoInfo.getString("title");
                     duration = videoInfo.getInt("duration");
-                    mediaList.add(buildMediaInfo(title, videoUrl, imageUrl, duration, mimeType));
+                    MediaItem current = new MediaItem.MediaItemBuilder(title, videoUrl, imageUrl, duration, mimeType).build();
+                    mediaList.add(current);
                 }
             }
 
@@ -100,16 +101,18 @@ public class VideoFetcher {
 
     }
 
-    public static MediaItem buildMediaInfo(String title, String videoUrl, String imageUrl, int duration, String mimeType){
-        MediaItem mediaItem = new MediaItem();
-        mediaItem.setTitle(title);
-        mediaItem.setVideoUrl(videoUrl);
-        mediaItem.setImageUrl(imageUrl);
-        mediaItem.setDuration(duration);
-        mediaItem.setMimeType(mimeType);
 
-        return mediaItem;
-    }
+
+//    public static MediaItem buildMediaInfo(String title, String videoUrl, String imageUrl, int duration, String mimeType){
+//        MediaItem.MediaItemBuilder mediaItem = new MediaItem.MediaItemBuilder(title, videoUrl, imageUrl, duration, mimeType);
+//        mediaItem.setTitle(title);
+//        mediaItem.setVideoUrl(videoUrl);
+//        mediaItem.setImageUrl(imageUrl);
+//        mediaItem.setDuration(duration);
+//        mediaItem.setMimeType(mimeType);
+//
+//        return mediaItem;
+//    }
 
     public static List<MediaItem> getVideoList(){
         return mediaList;
