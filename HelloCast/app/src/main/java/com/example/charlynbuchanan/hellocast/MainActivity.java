@@ -13,6 +13,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
+import android.widget.VideoView;
 
 import com.google.android.gms.cast.MediaInfo;
 import com.google.android.gms.cast.MediaMetadata;
@@ -25,13 +26,30 @@ import com.google.android.gms.cast.framework.SessionManagerListener;
 import com.google.android.gms.cast.framework.media.RemoteMediaClient;
 import com.google.android.gms.cast.framework.media.widget.ExpandedControllerActivity;
 import com.google.android.gms.common.images.WebImage;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
+import org.json.JSONObject;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+import retrofit2.converter.scalars.ScalarsConverterFactory;
 
 public class MainActivity extends AppCompatActivity  {
 
     private static String urlString = "https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/f.json";
+    public static final String BASE_URL = "https://commondatastorage.googleapis.com/";
+    public static ResponseBody rawJSON;
+    public static String retrofitJson;
+
 
     /* SessionManagerListener monitors sessions events (creation, suspension, resumption, termination)
     and automatically attempts to resume interrupted sessions. a Session ends when user stops casting or
@@ -40,6 +58,7 @@ public class MainActivity extends AppCompatActivity  {
     private CastSession castSession;
     private SessionManager sessionManager;
     MSessionManagerListner sessionManagerListener;
+    private Retrofit retrofit;
 
     private static ArrayList<MediaItem> movies = new ArrayList<>();
 
@@ -67,6 +86,37 @@ public class MainActivity extends AppCompatActivity  {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
+        Gson gson = new GsonBuilder()
+                .setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
+                .create();
+
+        retrofitJson = VideoFetcher.getJsonString();
+//        retrofit = new Retrofit.Builder()
+//                .baseUrl(BASE_URL)
+//                .addConverterFactory(ScalarsConverterFactory.create())
+//                // add other factories here, if needed.
+//                .build();
+//
+//        ApiInterface apiInterface = retrofit.create(ApiInterface.class);
+//        Call<ResponseBody> result = apiInterface.getJSON();
+//        result.enqueue(new Callback<ResponseBody>() {
+//            @Override
+//            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+//                try {
+//                    retrofitJson = response.body().string();
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//
+//            @Override
+//            public void onFailure(Call<ResponseBody> call, Throwable t) {
+//
+//            }
+//        });
+
+
         //castContext is a global singleton that coordinates the framework's interactions. It holds reference
         //to MediaRouter and starts/stops discovery process when app is in foreground/background, respectively
         //(see: CastOptionsProvider.class)
@@ -84,12 +134,12 @@ public class MainActivity extends AppCompatActivity  {
         getLoaderManager().initLoader(0, savedInstanceState, new LoaderManager.LoaderCallbacks<List<MediaItem>>() {
             @Override
             public Loader<List<MediaItem>> onCreateLoader(int i, Bundle bundle) {
-                return new VideoItemLoader(getApplicationContext(), urlString);
+
+                return new VideoItemLoader(getApplicationContext(), retrofitJson);
             }
 
             @Override
-            public void onLoadFinished(Loader<List<MediaItem>> loader, List<
-                    MediaItem> mediaItem) {
+            public void onLoadFinished(Loader<List<MediaItem>> loader, List<MediaItem> mediaItem) {
                 movies.addAll(mediaItem);
                 adapter.setData(movies);
 
@@ -101,6 +151,7 @@ public class MainActivity extends AppCompatActivity  {
             }
         });
         listView.setAdapter(adapter);
+
         AdapterView.OnItemClickListener listClick = new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
@@ -125,39 +176,13 @@ public class MainActivity extends AppCompatActivity  {
                 else {
                     Toast.makeText(getApplicationContext(), "Ths is where the media player was. \nCast this video by selecting the \ncast icon in the upper right corner.", Toast.LENGTH_LONG).show();
                 }
-
-
-
             }
         };
         listView.setOnItemClickListener(listClick);
-        //This seems redundant and weird...
 
-//        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-//            @Override
-//            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//                MediaItem current = movies.get(position);
-//                MediaMetadata movieMetadata = new MediaMetadata(MediaMetadata.MEDIA_TYPE_MOVIE);
-//                movieMetadata.putString("title", current.getTitle());
-//                movieMetadata.addImage(new WebImage((Uri.parse(current.getImageUrl()))));
-//                movieMetadata.putString("videoUrl", current.getVideoUrl());
-//                movieMetadata.putInt("duration", current.getDuration());
-//
-////                castSession = sessionManager.getCurrentCastSession();
-//
-//                    Toast.makeText(getApplicationContext(), "Ths is where the media player was. \nCast this video by selecting the \ncast icon in the upper right corner.", Toast.LENGTH_LONG).show();
-////                    showExpandedController();
-//                    MediaInfo mediaInfo = new MediaInfo.Builder(current.getVideoUrl())
-//                            .setStreamType(MediaInfo.STREAM_TYPE_BUFFERED)
-//                            .setMetadata(movieMetadata)
-//                            .setStreamDuration(current.getDuration() * 1000)
-//                            .setContentType("videos/mp4")
-//                            .build();
-//                    RemoteMediaClient remoteMediaClient = castSession.getRemoteMediaClient();
-//                    remoteMediaClient.load(mediaInfo);
-//
-//            }
-//        });
+
+
+
     }
 
     //cast button lives in menu
@@ -186,6 +211,11 @@ public class MainActivity extends AppCompatActivity  {
     public void showExpandedController() {
         Intent intent = new Intent(this, ExpandedControllerActivity.class);
         startActivity(intent);
+    }
+
+    public static String getRetrofitJson() {
+
+        return retrofitJson;
     }
 
 

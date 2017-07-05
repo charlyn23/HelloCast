@@ -2,8 +2,11 @@ package com.example.charlynbuchanan.hellocast;
 
 import android.content.AsyncTaskLoader;
 import android.content.Context;
+import android.os.Bundle;
 import android.support.v4.media.MediaBrowserCompat;
 import android.util.Log;
+
+import org.json.JSONObject;
 
 import java.util.List;
 
@@ -13,18 +16,20 @@ import java.util.List;
 
 public class VideoItemLoader extends AsyncTaskLoader<List<MediaItem>> {
 
-    private final String mUrl;
+    private static String json;
 
-    public VideoItemLoader(Context context, String url) {
+    VideoItemLoader(Context context, String json) {
         super(context);
-        this.mUrl = url;
+
+        this.json = json;
     }
 
     //This is called in a background thread
     @Override
     public List<MediaItem> loadInBackground() {
         try {
-            return VideoFetcher.buildMedia(mUrl);
+
+            return VideoFetcher.buildMedia(json);
         } catch (Exception e) {
             Log.e("VideoItemLoader", "Failed to fetch media data", e);
             return null;

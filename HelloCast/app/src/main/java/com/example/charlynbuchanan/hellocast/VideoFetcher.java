@@ -14,12 +14,24 @@ import java.io.InputStreamReader;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executor;
+
+import okhttp3.Call;
+import okhttp3.HttpUrl;
+import okhttp3.ResponseBody;
+import retrofit2.CallAdapter;
+import retrofit2.Callback;
+import retrofit2.Converter;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.scalars.ScalarsConverterFactory;
+
 
 /**
  * Created by charlynbuchanan on 6/28/17.
  */
 
-public class VideoFetcher {
+public class VideoFetcher{
 
     private static final String TAG = "VideoFetcher";
     protected static List<MediaItem> mediaList;
@@ -30,6 +42,13 @@ public class VideoFetcher {
     private static String imageUrl;
     private static String videoUrlPrefix;
     private static String imageUrlPrefix;
+    private static String retrofitJson;
+    public static String json;
+    private static Retrofit retrofit;
+    public static final String BASE_URL = "https://commondatastorage.googleapis.com/";
+
+
+
 
     protected JSONObject parseUrl(String urlString) {
         InputStream is = null;
@@ -61,12 +80,43 @@ public class VideoFetcher {
         }
     }
 
-    public static List<MediaItem> buildMedia(String url) throws JSONException {
+
+    public static String getJsonString() {
+        retrofit = new Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .addConverterFactory(ScalarsConverterFactory.create())
+                // add other factories here, if needed.
+                .build();
+
+        ApiInterface apiInterface = retrofit.create(ApiInterface.class);
+        retrofit2.Call<ResponseBody> result = apiInterface.getJSON();
+        result.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(retrofit2.Call<ResponseBody> call, Response<ResponseBody> response) {
+                try {
+                    retrofitJson = response.body().string();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onFailure(retrofit2.Call<ResponseBody> call, Throwable t) {
+
+            }
+        });
+        return retrofitJson;
+    }
+
+
+    public static List<MediaItem> buildMedia(String json) throws JSONException {
         if (null != mediaList) {
             return mediaList;
         }
         mediaList = new ArrayList<>();
-        JSONObject jsonObject = new VideoFetcher().parseUrl(url);
+//        getJsonString();
+        retrofitJson = json;
+        JSONObject jsonObject = new JSONObject(retrofitJson);
         JSONArray categories = jsonObject.getJSONArray("categories");
         if (null != categories) {
             //here, there is only one item in categores
@@ -100,6 +150,7 @@ public class VideoFetcher {
         return mediaList;
 
     }
+
 
 
 
