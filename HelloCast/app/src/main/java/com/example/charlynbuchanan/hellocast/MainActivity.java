@@ -90,10 +90,7 @@ public class MainActivity extends AppCompatActivity  {
         setContentView(R.layout.activity_main);
 
         jsonData = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        SharedPreferences.Editor editor = jsonData.edit();
-        retrofitJson = VideoFetcher.getJsonString();
-        editor.putString("json", retrofitJson);
-        editor.apply();
+
 
 
         Gson gson = new GsonBuilder()

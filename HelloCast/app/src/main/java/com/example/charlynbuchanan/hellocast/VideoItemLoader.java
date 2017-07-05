@@ -10,6 +10,9 @@ import org.json.JSONObject;
 
 import java.util.List;
 
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+
 /**
  * Created by charlynbuchanan on 6/28/17.
  */
@@ -28,7 +31,6 @@ public class VideoItemLoader extends AsyncTaskLoader<List<MediaItem>> {
     @Override
     public List<MediaItem> loadInBackground() {
         try {
-
             return VideoFetcher.buildMedia(json);
         } catch (Exception e) {
             Log.e("VideoItemLoader", "Failed to fetch media data", e);

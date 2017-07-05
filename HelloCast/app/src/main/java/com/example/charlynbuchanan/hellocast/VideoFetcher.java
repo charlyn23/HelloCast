@@ -52,7 +52,7 @@ public class VideoFetcher  {
     public static String json;
     private static Retrofit retrofit;
     public static final String BASE_URL = "https://commondatastorage.googleapis.com/";
-    public static SharedPreferences jsonData;
+    public static SharedPreferences jsonData = MainActivity.jsonData;
 
 
 
@@ -88,7 +88,42 @@ public class VideoFetcher  {
     }
 
 
-    public static String getJsonString() {
+//    public static String getJsonString() {
+//        retrofit = new Retrofit.Builder()
+//                .baseUrl(BASE_URL)
+//                .addConverterFactory(ScalarsConverterFactory.create())
+//                // add other factories here, if needed.
+//                .build();
+//
+//        ApiInterface apiInterface = retrofit.create(ApiInterface.class);
+//        final retrofit2.Call<ResponseBody> result = apiInterface.getJSON();
+//        result.enqueue(new Callback<ResponseBody>() {
+//            @Override
+//            public void onResponse(retrofit2.Call<ResponseBody> call, Response<ResponseBody> response) {
+//                try {
+//                    retrofitJson = response.body().string();
+//                    SharedPreferences.Editor editor = jsonData.edit();
+//                    editor.putString("json", retrofitJson);
+//                    editor.apply();
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//
+//            @Override
+//            public void onFailure(retrofit2.Call<ResponseBody> call, Throwable t) {
+//
+//            }
+//        });
+//        return retrofitJson;
+//    }
+
+
+    public static List<MediaItem> buildMedia(String json) throws JSONException, IOException {
+        if (null != mediaList) {
+            return mediaList;
+        }
+
         retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .addConverterFactory(ScalarsConverterFactory.create())
@@ -96,37 +131,21 @@ public class VideoFetcher  {
                 .build();
 
         ApiInterface apiInterface = retrofit.create(ApiInterface.class);
-        retrofit2.Call<ResponseBody> result = apiInterface.getJSON();
-        result.enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void onResponse(retrofit2.Call<ResponseBody> call, Response<ResponseBody> response) {
-                try {
-                    retrofitJson = response.body().string();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+        retrofit2.Call<ResponseBody> call = apiInterface.getJSON();
 
-            @Override
-            public void onFailure(retrofit2.Call<ResponseBody> call, Throwable t) {
+        try {
+            Response<ResponseBody> result = call.execute();
+            json = result.body().string();
+        }catch (IOException e){
 
-            }
-        });
-        return retrofitJson;
-    }
-
-
-    public static List<MediaItem> buildMedia(String json) throws JSONException {
-        if (null != mediaList) {
-            return mediaList;
         }
-        mediaList = new ArrayList<>();
-        retrofitJson = MainActivity.jsonData.getString("json", null);
-        //Something is happening here. I've resorted to saving the string to Shared Preferences and
-        //still, the string is null when it gets to the JSONObject line
 
-//        Log.d("buildMedia", retrofitJson);
-        JSONObject jsonObject = new JSONObject(MainActivity.jsonData.getString("json", null));
+
+
+        mediaList = new ArrayList<>();
+        Log.d("jsonData", json);
+
+        JSONObject jsonObject = new JSONObject(json);
         JSONArray categories = jsonObject.getJSONArray("categories");
         if (null != categories) {
             //here, there is only one item in categories
