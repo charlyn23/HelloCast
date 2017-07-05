@@ -1,5 +1,9 @@
 package com.example.charlynbuchanan.hellocast;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -14,6 +18,8 @@ import java.io.InputStreamReader;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executor;
 
 import okhttp3.Call;
@@ -31,7 +37,7 @@ import retrofit2.converter.scalars.ScalarsConverterFactory;
  * Created by charlynbuchanan on 6/28/17.
  */
 
-public class VideoFetcher{
+public class VideoFetcher  {
 
     private static final String TAG = "VideoFetcher";
     protected static List<MediaItem> mediaList;
@@ -42,10 +48,11 @@ public class VideoFetcher{
     private static String imageUrl;
     private static String videoUrlPrefix;
     private static String imageUrlPrefix;
-    private static String retrofitJson;
+    public static String retrofitJson;
     public static String json;
     private static Retrofit retrofit;
     public static final String BASE_URL = "https://commondatastorage.googleapis.com/";
+    public static SharedPreferences jsonData;
 
 
 
@@ -114,12 +121,15 @@ public class VideoFetcher{
             return mediaList;
         }
         mediaList = new ArrayList<>();
-//        getJsonString();
-        retrofitJson = json;
-        JSONObject jsonObject = new JSONObject(retrofitJson);
+        retrofitJson = MainActivity.jsonData.getString("json", null);
+        //Something is happening here. I've resorted to saving the string to Shared Preferences and
+        //still, the string is null when it gets to the JSONObject line
+
+//        Log.d("buildMedia", retrofitJson);
+        JSONObject jsonObject = new JSONObject(MainActivity.jsonData.getString("json", null));
         JSONArray categories = jsonObject.getJSONArray("categories");
         if (null != categories) {
-            //here, there is only one item in categores
+            //here, there is only one item in categories
             JSONObject moviesBlob = categories.getJSONObject(0);
             videoUrlPrefix = moviesBlob.getString("hls");
             imageUrlPrefix = moviesBlob.getString("images");
@@ -168,5 +178,7 @@ public class VideoFetcher{
     public static List<MediaItem> getVideoList(){
         return mediaList;
     }
+
+
 }
 

@@ -3,7 +3,9 @@ package com.example.charlynbuchanan.hellocast;
 import android.app.LoaderManager;
 import android.content.Intent;
 import android.content.Loader;
+import android.content.SharedPreferences;
 import android.net.Uri;
+import android.preference.PreferenceManager;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -49,6 +51,7 @@ public class MainActivity extends AppCompatActivity  {
     public static final String BASE_URL = "https://commondatastorage.googleapis.com/";
     public static ResponseBody rawJSON;
     public static String retrofitJson;
+    public static SharedPreferences jsonData;
 
 
     /* SessionManagerListener monitors sessions events (creation, suspension, resumption, termination)
@@ -86,12 +89,17 @@ public class MainActivity extends AppCompatActivity  {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        jsonData = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        SharedPreferences.Editor editor = jsonData.edit();
+        retrofitJson = VideoFetcher.getJsonString();
+        editor.putString("json", retrofitJson);
+        editor.apply();
+
 
         Gson gson = new GsonBuilder()
                 .setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
                 .create();
 
-        retrofitJson = VideoFetcher.getJsonString();
 //        retrofit = new Retrofit.Builder()
 //                .baseUrl(BASE_URL)
 //                .addConverterFactory(ScalarsConverterFactory.create())
