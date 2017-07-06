@@ -1,6 +1,7 @@
 package com.example.charlynbuchanan.hellocast;
 
 import android.os.Bundle;
+import android.support.v7.widget.RecyclerView;
 
 import com.google.android.gms.cast.MediaInfo;
 
@@ -8,7 +9,7 @@ import com.google.android.gms.cast.MediaInfo;
  * Created by charlynbuchanan on 6/28/17.
  */
 
-public class MediaItem {
+public class MediaItem  {
 
     private final String title;
     private final String videoUrl;
@@ -17,6 +18,7 @@ public class MediaItem {
     private final String mimeType;
 
     private MediaItem(MediaItemBuilder mediaItemBuilder){
+//        super();
         this.title = mediaItemBuilder.title;
         this.videoUrl = mediaItemBuilder.videoUrl;
         this.imageUrl = mediaItemBuilder.imageUrl;

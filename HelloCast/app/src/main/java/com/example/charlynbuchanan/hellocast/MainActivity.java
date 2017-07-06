@@ -1,49 +1,26 @@
 package com.example.charlynbuchanan.hellocast;
 
-import android.app.LoaderManager;
 import android.content.Intent;
-import android.content.Loader;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.preference.PreferenceManager;
-import android.support.v4.media.MediaBrowserCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
+import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ListView;
-import android.widget.Toast;
-import android.widget.VideoView;
-
-import com.google.android.gms.cast.MediaInfo;
-import com.google.android.gms.cast.MediaMetadata;
 import com.google.android.gms.cast.framework.CastButtonFactory;
 import com.google.android.gms.cast.framework.CastContext;
 import com.google.android.gms.cast.framework.CastSession;
 import com.google.android.gms.cast.framework.Session;
 import com.google.android.gms.cast.framework.SessionManager;
-import com.google.android.gms.cast.framework.SessionManagerListener;
-import com.google.android.gms.cast.framework.media.RemoteMediaClient;
 import com.google.android.gms.cast.framework.media.widget.ExpandedControllerActivity;
-import com.google.android.gms.common.images.WebImage;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
-import org.json.JSONObject;
+import org.json.JSONException;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 import okhttp3.ResponseBody;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
-import retrofit2.converter.scalars.ScalarsConverterFactory;
 
 public class MainActivity extends AppCompatActivity  {
 
@@ -52,20 +29,22 @@ public class MainActivity extends AppCompatActivity  {
     public static ResponseBody rawJSON;
     public static String retrofitJson;
     public static SharedPreferences jsonData;
+    public  CastContext castContext;
+    private static VideoListAdapter adapter;
 
 
     /* SessionManagerListener monitors sessions events (creation, suspension, resumption, termination)
     and automatically attempts to resume interrupted sessions. a Session ends when user stops casting or
     begins to cast something else to the same device
      */
-    private CastSession castSession;
+    public  CastSession castSession;
     private SessionManager sessionManager;
-    MSessionManagerListner sessionManagerListener;
+    public static MSessionManagerListener sessionManagerListener;
     private Retrofit retrofit;
 
     private static ArrayList<MediaItem> movies = new ArrayList<>();
 
-    private class MSessionManagerListner extends SimpleSessionManagerListener {
+    private class MSessionManagerListener extends SimpleSessionManagerListener {
 
         @Override
         public void onSessionStarted(Session session, String s) {
@@ -88,104 +67,38 @@ public class MainActivity extends AppCompatActivity  {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        final RecyclerView recyclerView = (RecyclerView) findViewById(R.id.list);
+        recyclerView.setHasFixedSize(true);
+
+        Thread fetchThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String json = VideoFetcher.fetchData();
+                    try {
+                        movies = (ArrayList<MediaItem>) VideoFetcher.buildMedia(json);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        });
+        fetchThread.start();
+        adapter = new VideoListAdapter(getApplicationContext(), R.layout.movie_row, movies);
+        recyclerView.setAdapter(adapter);
+
 
         jsonData = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-
-
-
-        Gson gson = new GsonBuilder()
-                .setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
-                .create();
-
-//        retrofit = new Retrofit.Builder()
-//                .baseUrl(BASE_URL)
-//                .addConverterFactory(ScalarsConverterFactory.create())
-//                // add other factories here, if needed.
-//                .build();
-//
-//        ApiInterface apiInterface = retrofit.create(ApiInterface.class);
-//        Call<ResponseBody> result = apiInterface.getJSON();
-//        result.enqueue(new Callback<ResponseBody>() {
-//            @Override
-//            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-//                try {
-//                    retrofitJson = response.body().string();
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//
-//            @Override
-//            public void onFailure(Call<ResponseBody> call, Throwable t) {
-//
-//            }
-//        });
-
 
         //castContext is a global singleton that coordinates the framework's interactions. It holds reference
         //to MediaRouter and starts/stops discovery process when app is in foreground/background, respectively
         //(see: CastOptionsProvider.class)
-        CastContext castContext = CastContext.getSharedInstance(this);
+        sessionManagerListener = new MSessionManagerListener();
+        castContext = CastContext.getSharedInstance(getApplicationContext());
         sessionManager = castContext.getSessionManager();
-        CastOptionsProvider castOptionsProvider = new CastOptionsProvider();
-        castOptionsProvider.getCastOptions(getApplicationContext());
-
-        sessionManagerListener = new MSessionManagerListner();
-
-
-        final ListView listView = (ListView)findViewById(R.id.list);
-        final VideoListAdapter adapter = new VideoListAdapter(MainActivity.this, R.layout.movie_row, new ArrayList<MediaItem>());
-
-        getLoaderManager().initLoader(0, savedInstanceState, new LoaderManager.LoaderCallbacks<List<MediaItem>>() {
-            @Override
-            public Loader<List<MediaItem>> onCreateLoader(int i, Bundle bundle) {
-
-                return new VideoItemLoader(getApplicationContext(), retrofitJson);
-            }
-
-            @Override
-            public void onLoadFinished(Loader<List<MediaItem>> loader, List<MediaItem> mediaItem) {
-                movies.addAll(mediaItem);
-                adapter.setData(movies);
-
-            }
-
-            @Override
-            public void onLoaderReset(Loader<List<MediaItem>> loader) {
-
-            }
-        });
-        listView.setAdapter(adapter);
-
-        AdapterView.OnItemClickListener listClick = new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-                MediaItem current = movies.get(position);
-                MediaMetadata movieMetadata = new MediaMetadata(MediaMetadata.MEDIA_TYPE_MOVIE);
-                movieMetadata.putString("title", current.getTitle());
-                movieMetadata.addImage(new WebImage((Uri.parse(current.getImageUrl()))));
-                movieMetadata.putString("videoUrl", current.getVideoUrl());
-                movieMetadata.putInt("duration", current.getDuration());
-
-                castSession = sessionManager.getCurrentCastSession();
-                if (castSession != null) {
-                    MediaInfo mediaInfo = new MediaInfo.Builder(current.getVideoUrl())
-                            .setStreamType(MediaInfo.STREAM_TYPE_BUFFERED)
-                            .setMetadata(movieMetadata)
-                            .setStreamDuration(current.getDuration() * 1000)
-                            .setContentType("videos/mp4")
-                            .build();
-                    RemoteMediaClient remoteMediaClient = castSession.getRemoteMediaClient();
-                    remoteMediaClient.load(mediaInfo);
-                }
-                else {
-                    Toast.makeText(getApplicationContext(), "Ths is where the media player was. \nCast this video by selecting the \ncast icon in the upper right corner.", Toast.LENGTH_LONG).show();
-                }
-            }
-        };
-        listView.setOnItemClickListener(listClick);
-
-
 
 
     }
@@ -201,8 +114,11 @@ public class MainActivity extends AppCompatActivity  {
 
     @Override
     protected void onResume() {
-        castSession = sessionManager.getCurrentCastSession();
+
         sessionManager.addSessionManagerListener(sessionManagerListener);
+        if (castSession != null) {
+            castSession = sessionManager.getCurrentCastSession();
+        }
         super.onResume();
     }
 
@@ -217,12 +133,4 @@ public class MainActivity extends AppCompatActivity  {
         Intent intent = new Intent(this, ExpandedControllerActivity.class);
         startActivity(intent);
     }
-
-    public static String getRetrofitJson() {
-
-        return retrofitJson;
-    }
-
-
-
 }
