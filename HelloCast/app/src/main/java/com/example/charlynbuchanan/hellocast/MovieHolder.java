@@ -42,7 +42,7 @@ public class MovieHolder extends RecyclerView.ViewHolder implements View.OnClick
 
 
         //setup UI widgets
-        this.titleView = (TextView) itemView.findViewById(R.id.title_view);
+        this.titleView = (TextView) itemView.findViewById(R.id.titleView);
         this.posterView = (ImageView) itemView.findViewById(R.id.imageView);
         this.addButton = (ImageView) itemView.findViewById(R.id.addButton);
 

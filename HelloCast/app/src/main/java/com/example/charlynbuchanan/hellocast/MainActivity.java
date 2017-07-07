@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import com.google.android.gms.cast.framework.CastButtonFactory;
@@ -30,7 +31,6 @@ public class MainActivity extends AppCompatActivity  {
     public static String retrofitJson;
     public static SharedPreferences jsonData;
     public  CastContext castContext;
-    private static VideoListAdapter adapter;
 
 
     /* SessionManagerListener monitors sessions events (creation, suspension, resumption, termination)
@@ -39,9 +39,11 @@ public class MainActivity extends AppCompatActivity  {
      */
     public  CastSession castSession;
     private SessionManager sessionManager;
-    public static MSessionManagerListener sessionManagerListener;
+    private  MSessionManagerListener sessionManagerListener;
     private Retrofit retrofit;
-
+    public static RecyclerView.LayoutManager layoutManager;
+    private RecyclerView recyclerView;
+    private  VideoListAdapter adapter;
     private static ArrayList<MediaItem> movies = new ArrayList<>();
 
     private class MSessionManagerListener extends SimpleSessionManagerListener {
@@ -67,8 +69,9 @@ public class MainActivity extends AppCompatActivity  {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        final RecyclerView recyclerView = (RecyclerView) findViewById(R.id.list);
-        recyclerView.setHasFixedSize(true);
+        sessionManagerListener = new MSessionManagerListener();
+        castContext = CastContext.getSharedInstance(getApplicationContext());
+        sessionManager = castContext.getSessionManager();
 
         Thread fetchThread = new Thread(new Runnable() {
             @Override
@@ -77,6 +80,19 @@ public class MainActivity extends AppCompatActivity  {
                     String json = VideoFetcher.fetchData();
                     try {
                         movies = (ArrayList<MediaItem>) VideoFetcher.buildMedia(json);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                adapter = new VideoListAdapter(getApplicationContext(), R.layout.movie_row, movies);
+                                layoutManager = new LinearLayoutManager(MainActivity.this);
+                                recyclerView = (RecyclerView) findViewById(R.id.list);
+                                recyclerView.setHasFixedSize(true);
+                                recyclerView.setLayoutManager(layoutManager);
+                                recyclerView.setAdapter(adapter);
+
+                            }
+                        });
+
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -84,24 +100,16 @@ public class MainActivity extends AppCompatActivity  {
                     e.printStackTrace();
                 }
 
+
             }
+
+
         });
         fetchThread.start();
-        adapter = new VideoListAdapter(getApplicationContext(), R.layout.movie_row, movies);
-        recyclerView.setAdapter(adapter);
-
-
-        jsonData = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-
-        //castContext is a global singleton that coordinates the framework's interactions. It holds reference
-        //to MediaRouter and starts/stops discovery process when app is in foreground/background, respectively
-        //(see: CastOptionsProvider.class)
-        sessionManagerListener = new MSessionManagerListener();
-        castContext = CastContext.getSharedInstance(getApplicationContext());
-        sessionManager = castContext.getSessionManager();
-
 
     }
+
+
 
     //cast button lives in menu
     @Override
