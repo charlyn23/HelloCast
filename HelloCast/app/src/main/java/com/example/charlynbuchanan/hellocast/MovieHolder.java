@@ -64,8 +64,6 @@ public class MovieHolder extends RecyclerView.ViewHolder implements View.OnClick
     @Override
     public void onClick(View view) {
         if (this.movie != null) {
-            Toast.makeText(context, "Clicked on " + movie.getTitle(), Toast.LENGTH_SHORT).show();
-
             MediaItem current = movie;
             MediaMetadata movieMetadata = new MediaMetadata(MediaMetadata.MEDIA_TYPE_MOVIE);
             movieMetadata.putString("title", movie.getTitle());
