@@ -46,4 +46,11 @@ public class Video {
     @SerializedName("tracks")
     @Expose
     public List<Track> tracks = null;
+
+    public Video(String title, int duration, String imageTail){
+        this.title = title;
+        this.duration = duration;
+        this.image480x270 = imageTail;
+
+    }
 }

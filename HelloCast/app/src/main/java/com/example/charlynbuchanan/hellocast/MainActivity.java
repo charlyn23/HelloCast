@@ -14,6 +14,11 @@ import android.view.Menu;
 
 import com.example.charlynbuchanan.hellocast.api.ApiService;
 import com.example.charlynbuchanan.hellocast.api.ApiUtils;
+import com.example.charlynbuchanan.hellocast.model.ApiAnswerResponse;
+import com.example.charlynbuchanan.hellocast.model.Category;
+import com.example.charlynbuchanan.hellocast.model.Movie;
+import com.example.charlynbuchanan.hellocast.model.Source;
+import com.example.charlynbuchanan.hellocast.model.Video;
 import com.google.android.gms.cast.framework.CastButtonFactory;
 import com.google.android.gms.cast.framework.CastContext;
 import com.google.android.gms.cast.framework.CastSession;
@@ -24,7 +29,9 @@ import com.google.android.gms.cast.framework.media.widget.ExpandedControllerActi
 import org.json.JSONException;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.List;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -32,29 +39,36 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 
-public class MainActivity extends AppCompatActivity  {
+public class MainActivity extends AppCompatActivity {
 
     private static String urlString = "https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/f.json";
     public static final String BASE_URL = "https://commondatastorage.googleapis.com/";
     public static ResponseBody rawJSON;
     public static String jsonResponse;
     public static SharedPreferences jsonData;
-    public  CastContext castContext;
+    public CastContext castContext;
+    public static ArrayList<Video> responseMovieObjects;
+    public static String videoUrl;
+    public static String imageUrl;
+    public static int duration;
+    public static String title;
+    public static String imageUrlTail;
+    public static String videoUrlTail;
 
 
     /* SessionManagerListener monitors sessions events (creation, suspension, resumption, termination)
     and automatically attempts to resume interrupted sessions. a Session ends when user stops casting or
     begins to cast something else to the same device
      */
-    public  CastSession castSession;
+    public CastSession castSession;
     private SessionManager sessionManager;
-    private  MSessionManagerListener sessionManagerListener;
+    private MSessionManagerListener sessionManagerListener;
     private Retrofit retrofit;
     public static RecyclerView.LayoutManager layoutManager;
     private RecyclerView recyclerView;
-    private  VideoListAdapter adapter;
+    private VideoListAdapter adapter;
     private static ArrayList<MediaItem> movies = new ArrayList<>();
-    private ApiService service;
+    private static ApiService service;
 
     private class MSessionManagerListener extends SimpleSessionManagerListener {
 
@@ -84,48 +98,14 @@ public class MainActivity extends AppCompatActivity  {
         sessionManager = castContext.getSessionManager();
         service = ApiUtils.getApiService();
 
-        loadResponse();
+        try {
+            loadResponse();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-
-
-
-
-//        Thread fetchThread = new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                try {
-//                    String json = VideoFetcher.fetchData();
-//                    try {
-//                        movies = (ArrayList<MediaItem>) VideoFetcher.buildMedia(json);
-//                        runOnUiThread(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                adapter = new VideoListAdapter(getApplicationContext(), R.layout.movie_row, movies);
-//                                layoutManager = new LinearLayoutManager(MainActivity.this);
-//                                recyclerView = (RecyclerView) findViewById(R.id.list);
-//                                recyclerView.setHasFixedSize(true);
-//                                recyclerView.setLayoutManager(layoutManager);
-//                                recyclerView.setAdapter(adapter);
-//
-//                            }
-//                        });
-//
-//                    } catch (JSONException e) {
-//                        e.printStackTrace();
-//                    }
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//
-//
-//            }
-//
-//
-//        });
-//        fetchThread.start();
 
     }
-
 
 
     //cast button lives in menu
@@ -159,24 +139,96 @@ public class MainActivity extends AppCompatActivity  {
         startActivity(intent);
     }
 
-    public void loadResponse() {
-        service.getJSON().enqueue(new Callback<ResponseBody>() {
+    //Each Cast Media item requires a title, videoUrl, imageUrl and duration. The urls must be concatenated
+    //from different parts of the json response, thus, multiple calls.
+    public void loadResponse() throws IOException {
+
+        service.getJSON().enqueue(new Callback<ApiAnswerResponse>() {
             @Override
-            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                if (response.isSuccessful()){
-                    try {
-                        jsonResponse = response.body().string();
-                        Log.d("loadData", jsonResponse);
-                    } catch (IOException e) {
-                        e.printStackTrace();
+            public void onResponse(Call<ApiAnswerResponse> call, Response<ApiAnswerResponse> response) {
+                if (response.isSuccessful()) {
+                    List<Category> categoryList = response.body().getCategories();
+                    for (int i = 0; i < categoryList.size(); i++){
+                        imageUrl = categoryList.get(i).images;
+                        videoUrl = categoryList.get(i).getHls();
+                        Log.d("imgVid", imageUrl + " " + videoUrl);
+                        List<Video> videos = categoryList.get(i).videos;
+                        for (int j = 0; j < videos.size(); j++){
+                            Video current = videos.get(i);
+                            String title = current.title;
+                            int duration  = current.duration;
+                            String imageTail = current.image480x270;
+                            
+                        }
                     }
                 }
             }
 
             @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
-                Log.e("loadData", "error loading for API");
+            public void onFailure(Call<ApiAnswerResponse> call, Throwable t) {
+                Log.e("loadData", "error loading API" + t.getMessage());
+
             }
         });
+        service.getVideoUrl().enqueue(new Callback<List<Source>>() {
+            @Override
+            public void onResponse(Call<List<Source>> call, Response<List<Source>> response) {
+                List<Source> sources = response.body();
+                Source correctVidFormatUrl = sources.get(0);
+                videoUrlTail = correctVidFormatUrl.url;
+                Log.d("vidTail", videoUrlTail);
+            }
+
+            @Override
+            public void onFailure(Call<List<Source>> call, Throwable t) {
+
+            }
+        });
+
+//        service.getJSON().enqueue(new Callback<ArrayList<ApiAnswerResponse>>() {
+//            //imageUrl tail-end nested in videos
+//            @Override
+//            public void onResponse(Call<ArrayList<ApiAnswerResponse>> call, Response<ArrayList<ApiAnswerResponse>> response) {
+//                if (response.isSuccessful()) {
+//                    ArrayList<ApiAnswerResponse> responsesList = response.body();
+//                    List<Category> categories = responsesList.get(0).getCategories();
+//                    for (int i = 0; i < categories.size(); i++) {
+//                        String videoBaseUrl = categories.get(i).getHls();
+//                        String imageBaseUrl = categories.get(i).getImages();
+//                        Log.d("urls", videoBaseUrl + " " + imageBaseUrl);
+//                    }
+//                }
+//            }
+//
+//            @Override
+//            public void onFailure(Call<ArrayList<ApiAnswerResponse>> call, Throwable t) {
+//                Log.e("loadData", "error loading API");
+//            }
+
+//            @Override
+//            public void onFailure(Call<ArrayList<Video>> call, Throwable t) {
+//
+//            }
+//        });
+//        //videoUrl tail-end nested in videos
+//        service.getVideoUrl().enqueue(new Callback<Source>() {
+//            @Override
+//            public void onResponse(Call<Source> call, Response<Source> response) {
+//                if (response.isSuccessful()) {
+//                    Source source = response.body();
+//                    videoUrlTail = source.url;                                                      //video url tail
+//                    Log.d("videoUrlTail", videoUrlTail);
+//                }
+//            }
+//
+//            @Override
+//            public void onFailure(Call<Source> call, Throwable t) {
+//
+//            }
+////        });
+//
+//
+//        });
+//    }
     }
 }
