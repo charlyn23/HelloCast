@@ -7,7 +7,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v4.app.Fragment;
+
+import android.util.Log;
 import android.view.Menu;
+
+import com.example.charlynbuchanan.hellocast.api.ApiService;
+import com.example.charlynbuchanan.hellocast.api.ApiUtils;
 import com.google.android.gms.cast.framework.CastButtonFactory;
 import com.google.android.gms.cast.framework.CastContext;
 import com.google.android.gms.cast.framework.CastSession;
@@ -21,6 +27,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 import retrofit2.Retrofit;
 
 public class MainActivity extends AppCompatActivity  {
@@ -28,7 +37,7 @@ public class MainActivity extends AppCompatActivity  {
     private static String urlString = "https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/f.json";
     public static final String BASE_URL = "https://commondatastorage.googleapis.com/";
     public static ResponseBody rawJSON;
-    public static String retrofitJson;
+    public static String jsonResponse;
     public static SharedPreferences jsonData;
     public  CastContext castContext;
 
@@ -45,6 +54,7 @@ public class MainActivity extends AppCompatActivity  {
     private RecyclerView recyclerView;
     private  VideoListAdapter adapter;
     private static ArrayList<MediaItem> movies = new ArrayList<>();
+    private ApiService service;
 
     private class MSessionManagerListener extends SimpleSessionManagerListener {
 
@@ -72,40 +82,47 @@ public class MainActivity extends AppCompatActivity  {
         sessionManagerListener = new MSessionManagerListener();
         castContext = CastContext.getSharedInstance(getApplicationContext());
         sessionManager = castContext.getSessionManager();
+        service = ApiUtils.getApiService();
 
-        Thread fetchThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    String json = VideoFetcher.fetchData();
-                    try {
-                        movies = (ArrayList<MediaItem>) VideoFetcher.buildMedia(json);
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                adapter = new VideoListAdapter(getApplicationContext(), R.layout.movie_row, movies);
-                                layoutManager = new LinearLayoutManager(MainActivity.this);
-                                recyclerView = (RecyclerView) findViewById(R.id.list);
-                                recyclerView.setHasFixedSize(true);
-                                recyclerView.setLayoutManager(layoutManager);
-                                recyclerView.setAdapter(adapter);
-
-                            }
-                        });
-
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+        loadResponse();
 
 
-            }
 
 
-        });
-        fetchThread.start();
+
+//        Thread fetchThread = new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                try {
+//                    String json = VideoFetcher.fetchData();
+//                    try {
+//                        movies = (ArrayList<MediaItem>) VideoFetcher.buildMedia(json);
+//                        runOnUiThread(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                adapter = new VideoListAdapter(getApplicationContext(), R.layout.movie_row, movies);
+//                                layoutManager = new LinearLayoutManager(MainActivity.this);
+//                                recyclerView = (RecyclerView) findViewById(R.id.list);
+//                                recyclerView.setHasFixedSize(true);
+//                                recyclerView.setLayoutManager(layoutManager);
+//                                recyclerView.setAdapter(adapter);
+//
+//                            }
+//                        });
+//
+//                    } catch (JSONException e) {
+//                        e.printStackTrace();
+//                    }
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//
+//
+//            }
+//
+//
+//        });
+//        fetchThread.start();
 
     }
 
@@ -140,5 +157,26 @@ public class MainActivity extends AppCompatActivity  {
     public void showExpandedController() {
         Intent intent = new Intent(this, ExpandedControllerActivity.class);
         startActivity(intent);
+    }
+
+    public void loadResponse() {
+        service.getJSON().enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                if (response.isSuccessful()){
+                    try {
+                        jsonResponse = response.body().string();
+                        Log.d("loadData", jsonResponse);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                Log.e("loadData", "error loading for API");
+            }
+        });
     }
 }

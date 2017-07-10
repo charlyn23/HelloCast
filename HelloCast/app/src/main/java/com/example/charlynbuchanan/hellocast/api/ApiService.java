@@ -1,4 +1,4 @@
-package com.example.charlynbuchanan.hellocast;
+package com.example.charlynbuchanan.hellocast.api;
 
 import org.json.JSONObject;
 
@@ -10,7 +10,7 @@ import retrofit2.http.GET;
  * Created by charlynbuchanan on 6/30/17.
  */
 
-public interface ApiInterface {
+public interface ApiService {
         @GET("gtv-videos-bucket/CastVideos/f.json")
         Call<ResponseBody> getJSON();
 }

@@ -8,5 +8,5 @@
     <string name="video_error_server_unaccessible">Media server was not reachable</string>
     <string name="video_error_unknown_error">Failed to load video</string>
     <string name="transition_image">transition-image</string>
-    <string name="addToQueue">Add to Queue</string>
+    <string name="add_to_queue">Add to Queue</string>
     <string name="current_playlist">Playlist</string></resources>

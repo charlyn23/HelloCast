@@ -18,7 +18,6 @@ public class MediaItem  {
     private final String mimeType;
 
     private MediaItem(MediaItemBuilder mediaItemBuilder){
-//        super();
         this.title = mediaItemBuilder.title;
         this.videoUrl = mediaItemBuilder.videoUrl;
         this.imageUrl = mediaItemBuilder.imageUrl;
@@ -49,18 +48,6 @@ public class MediaItem  {
         return new MediaItem.MediaItemBuilder(title, videoUrl, imageUrl, duration, mimeType).build();
     }
 
-
-//    public static final MediaItem fromBundle(Bundle wrapper) {
-//        if (null == wrapper) {
-//            return null;
-//        }
-//        MediaItem media = new MediaItem();
-//        media.setVideoUrl(wrapper.getString("videoUrl"));
-//        media.setTitle(wrapper.getString("title"));
-//        media.setImageUrl(wrapper.getString("imgUrl"));
-//        media.setDuration(wrapper.getInt("duration") * 1000);
-//        return media;
-//    }
 
     public static class MediaItemBuilder {
         private String title;
