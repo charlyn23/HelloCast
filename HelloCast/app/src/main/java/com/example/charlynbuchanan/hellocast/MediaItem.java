@@ -17,7 +17,7 @@ public class MediaItem  {
     private final int duration;
     private final String mimeType;
 
-    private MediaItem(MediaItemBuilder mediaItemBuilder){
+    MediaItem(MediaItemBuilder mediaItemBuilder){
         this.title = mediaItemBuilder.title;
         this.videoUrl = mediaItemBuilder.videoUrl;
         this.imageUrl = mediaItemBuilder.imageUrl;

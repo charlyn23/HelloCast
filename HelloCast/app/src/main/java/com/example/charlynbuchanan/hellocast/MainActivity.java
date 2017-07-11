@@ -54,6 +54,9 @@ public class MainActivity extends AppCompatActivity {
     public static String title;
     public static String imageUrlTail;
     public static String videoUrlTail;
+    public static String mimeType;
+    public static List<Video> videos;
+    public static ArrayList<MediaItem> mediaItems;
 
 
     /* SessionManagerListener monitors sessions events (creation, suspension, resumption, termination)
@@ -152,15 +155,23 @@ public class MainActivity extends AppCompatActivity {
                         imageUrl = categoryList.get(i).images;
                         videoUrl = categoryList.get(i).getHls();
                         Log.d("imgVid", imageUrl + " " + videoUrl);
-                        List<Video> videos = categoryList.get(i).videos;
-                        for (int j = 0; j < videos.size(); j++){
-                            Video current = videos.get(i);
-                            String title = current.title;
-                            int duration  = current.duration;
-                            String imageTail = current.image480x270;
-                            
+                        videos = categoryList.get(i).videos;
+                        for (Video video : videos) {
+                            imageUrlTail = video.image480x270;
+                            title = video.title;
+                            duration = video.duration;
+                            List<Source> sources = video.sources;
+                            videoUrlTail = sources.get(0).url;
+                            mimeType = sources.get(0).mime;
+                            Log.d("videoData", title + " " + imageUrl + imageUrlTail + " " + videoUrl + videoUrlTail + " " + duration);
+
+                            //With all of the required MediaItem data collected, we can build MediaItems for cast
+                            MediaItem mediaItem = new MediaItem(new MediaItem.MediaItemBuilder(title, videoUrl+videoUrlTail, imageUrl+imageUrlTail, duration, mimeType));
+                            movies.add(mediaItem);
                         }
                     }
+                    updateUI();
+
                 }
             }
 
@@ -170,65 +181,17 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
-        service.getVideoUrl().enqueue(new Callback<List<Source>>() {
-            @Override
-            public void onResponse(Call<List<Source>> call, Response<List<Source>> response) {
-                List<Source> sources = response.body();
-                Source correctVidFormatUrl = sources.get(0);
-                videoUrlTail = correctVidFormatUrl.url;
-                Log.d("vidTail", videoUrlTail);
-            }
 
-            @Override
-            public void onFailure(Call<List<Source>> call, Throwable t) {
 
-            }
-        });
 
-//        service.getJSON().enqueue(new Callback<ArrayList<ApiAnswerResponse>>() {
-//            //imageUrl tail-end nested in videos
-//            @Override
-//            public void onResponse(Call<ArrayList<ApiAnswerResponse>> call, Response<ArrayList<ApiAnswerResponse>> response) {
-//                if (response.isSuccessful()) {
-//                    ArrayList<ApiAnswerResponse> responsesList = response.body();
-//                    List<Category> categories = responsesList.get(0).getCategories();
-//                    for (int i = 0; i < categories.size(); i++) {
-//                        String videoBaseUrl = categories.get(i).getHls();
-//                        String imageBaseUrl = categories.get(i).getImages();
-//                        Log.d("urls", videoBaseUrl + " " + imageBaseUrl);
-//                    }
-//                }
-//            }
-//
-//            @Override
-//            public void onFailure(Call<ArrayList<ApiAnswerResponse>> call, Throwable t) {
-//                Log.e("loadData", "error loading API");
-//            }
+    }
 
-//            @Override
-//            public void onFailure(Call<ArrayList<Video>> call, Throwable t) {
-//
-//            }
-//        });
-//        //videoUrl tail-end nested in videos
-//        service.getVideoUrl().enqueue(new Callback<Source>() {
-//            @Override
-//            public void onResponse(Call<Source> call, Response<Source> response) {
-//                if (response.isSuccessful()) {
-//                    Source source = response.body();
-//                    videoUrlTail = source.url;                                                      //video url tail
-//                    Log.d("videoUrlTail", videoUrlTail);
-//                }
-//            }
-//
-//            @Override
-//            public void onFailure(Call<Source> call, Throwable t) {
-//
-//            }
-////        });
-//
-//
-//        });
-//    }
+    public void updateUI(){
+        adapter = new VideoListAdapter(getApplicationContext(), R.layout.movie_row, movies);
+        layoutManager = new LinearLayoutManager(MainActivity.this);
+        recyclerView = (RecyclerView) findViewById(R.id.list);
+        recyclerView.setHasFixedSize(true);
+        recyclerView.setLayoutManager(layoutManager);
+        recyclerView.setAdapter(adapter);
     }
 }

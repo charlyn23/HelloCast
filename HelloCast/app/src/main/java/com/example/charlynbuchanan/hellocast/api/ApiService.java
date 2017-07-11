@@ -28,5 +28,8 @@ public interface ApiService {
         @GET("gtv-videos-bucket/CastVideos/f.json")
         Call<List<Source>>getVideoUrl();
 
+        @GET("gtv-videos-bucket/CastVideos/f.json")
+        Call<List<Video>>getVideos();
+
 
 }
