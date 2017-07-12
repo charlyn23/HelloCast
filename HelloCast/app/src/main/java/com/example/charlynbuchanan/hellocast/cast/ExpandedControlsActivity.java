@@ -1,7 +1,8 @@
-package com.example.charlynbuchanan.hellocast;
+package com.example.charlynbuchanan.hellocast.cast;
 
 import android.view.Menu;
 
+import com.example.charlynbuchanan.hellocast.R;
 import com.google.android.gms.cast.framework.CastButtonFactory;
 import com.google.android.gms.cast.framework.media.widget.ExpandedControllerActivity;
 

@@ -13,7 +13,6 @@ import java.util.List;
 public class ApiAnswerResponse {
 
     @SerializedName("categories")
-    @Expose
     private List<Category> categories = null;
 
     public List<Category> getCategories() {

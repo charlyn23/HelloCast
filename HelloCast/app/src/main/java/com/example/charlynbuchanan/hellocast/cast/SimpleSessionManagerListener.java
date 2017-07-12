@@ -1,4 +1,4 @@
-package com.example.charlynbuchanan.hellocast;
+package com.example.charlynbuchanan.hellocast.cast;
 
 import com.google.android.gms.cast.framework.Session;
 import com.google.android.gms.cast.framework.SessionManagerListener;

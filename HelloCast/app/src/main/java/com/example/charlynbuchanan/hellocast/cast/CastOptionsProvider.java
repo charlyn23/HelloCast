@@ -1,4 +1,4 @@
-package com.example.charlynbuchanan.hellocast;
+package com.example.charlynbuchanan.hellocast.cast;
 
 import android.content.Context;
 import android.text.format.DateUtils;

@@ -1,9 +1,4 @@
-package com.example.charlynbuchanan.hellocast;
-
-import android.os.Bundle;
-import android.support.v7.widget.RecyclerView;
-
-import com.google.android.gms.cast.MediaInfo;
+package com.example.charlynbuchanan.hellocast.model;
 
 /**
  * Created by charlynbuchanan on 6/28/17.
@@ -17,7 +12,7 @@ public class MediaItem  {
     private final int duration;
     private final String mimeType;
 
-    MediaItem(MediaItemBuilder mediaItemBuilder){
+    public MediaItem(MediaItemBuilder mediaItemBuilder){
         this.title = mediaItemBuilder.title;
         this.videoUrl = mediaItemBuilder.videoUrl;
         this.imageUrl = mediaItemBuilder.imageUrl;

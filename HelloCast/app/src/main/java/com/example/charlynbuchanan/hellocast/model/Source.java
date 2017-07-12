@@ -10,12 +10,9 @@ import com.google.gson.annotations.SerializedName;
 public class Source {
 
     @SerializedName("type")
-    @Expose
     public String type;
     @SerializedName("mime")
-    @Expose
     public String mime;
     @SerializedName("url")
-    @Expose
     public String url;
 }

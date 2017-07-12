@@ -12,7 +12,6 @@ import java.util.List;
 public class Movie {
 
     @SerializedName("categories")
-    @Expose
     public List<Category> categories = null;
 
 }

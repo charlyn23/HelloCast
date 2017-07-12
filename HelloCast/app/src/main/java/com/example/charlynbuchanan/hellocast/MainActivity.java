@@ -1,77 +1,71 @@
 package com.example.charlynbuchanan.hellocast;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
+import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v4.app.Fragment;
 
 import android.util.Log;
 import android.view.Menu;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.example.charlynbuchanan.hellocast.api.ApiService;
 import com.example.charlynbuchanan.hellocast.api.ApiUtils;
+import com.example.charlynbuchanan.hellocast.cast.CastOptionsProvider;
+import com.example.charlynbuchanan.hellocast.cast.SimpleSessionManagerListener;
 import com.example.charlynbuchanan.hellocast.model.ApiAnswerResponse;
 import com.example.charlynbuchanan.hellocast.model.Category;
-import com.example.charlynbuchanan.hellocast.model.Movie;
+import com.example.charlynbuchanan.hellocast.model.MediaItem;
 import com.example.charlynbuchanan.hellocast.model.Source;
 import com.example.charlynbuchanan.hellocast.model.Video;
+import com.example.charlynbuchanan.hellocast.ui.CustomItemClickListener;
+import com.google.android.gms.cast.MediaInfo;
+import com.google.android.gms.cast.MediaMetadata;
 import com.google.android.gms.cast.framework.CastButtonFactory;
 import com.google.android.gms.cast.framework.CastContext;
 import com.google.android.gms.cast.framework.CastSession;
 import com.google.android.gms.cast.framework.Session;
 import com.google.android.gms.cast.framework.SessionManager;
+import com.google.android.gms.cast.framework.media.RemoteMediaClient;
 import com.google.android.gms.cast.framework.media.widget.ExpandedControllerActivity;
-
-import org.json.JSONException;
+import com.google.android.gms.common.images.WebImage;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
-import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static String urlString = "https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/f.json";
-    public static final String BASE_URL = "https://commondatastorage.googleapis.com/";
-    public static ResponseBody rawJSON;
-    public static String jsonResponse;
-    public static SharedPreferences jsonData;
-    public CastContext castContext;
-    public static ArrayList<Video> responseMovieObjects;
-    public static String videoUrl;
-    public static String imageUrl;
-    public static int duration;
-    public static String title;
-    public static String imageUrlTail;
-    public static String videoUrlTail;
-    public static String mimeType;
-    public static List<Video> videos;
-    public static ArrayList<MediaItem> mediaItems;
+    private CastContext castContext;
+    private String videoUrl;
+    private String imageUrl;
+    private int duration;
+    private String title;
+    private String imageUrlTail;
+    private String videoUrlTail;
+    private String mimeType;
+    private List<Video> videos;
+    private CustomItemClickListener customItemClickListener;
 
 
     /* SessionManagerListener monitors sessions events (creation, suspension, resumption, termination)
     and automatically attempts to resume interrupted sessions. a Session ends when user stops casting or
     begins to cast something else to the same device
      */
-    public CastSession castSession;
+    private CastSession castSession;
     private SessionManager sessionManager;
     private MSessionManagerListener sessionManagerListener;
-    private Retrofit retrofit;
-    public static RecyclerView.LayoutManager layoutManager;
-    private RecyclerView recyclerView;
     private VideoListAdapter adapter;
-    private static ArrayList<MediaItem> movies = new ArrayList<>();
-    private static ApiService service;
+    private ArrayList<MediaItem> movies = new ArrayList<>();
+    private ApiService service;
 
     private class MSessionManagerListener extends SimpleSessionManagerListener {
 
@@ -107,9 +101,7 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-
     }
-
 
     //cast button lives in menu
     @Override
@@ -122,7 +114,6 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onResume() {
-
         sessionManager.addSessionManagerListener(sessionManagerListener);
         if (castSession != null) {
             castSession = sessionManager.getCurrentCastSession();
@@ -151,47 +142,79 @@ public class MainActivity extends AppCompatActivity {
             public void onResponse(Call<ApiAnswerResponse> call, Response<ApiAnswerResponse> response) {
                 if (response.isSuccessful()) {
                     List<Category> categoryList = response.body().getCategories();
-                    for (int i = 0; i < categoryList.size(); i++){
-                        imageUrl = categoryList.get(i).images;
-                        videoUrl = categoryList.get(i).getHls();
-                        Log.d("imgVid", imageUrl + " " + videoUrl);
-                        videos = categoryList.get(i).videos;
-                        for (Video video : videos) {
-                            imageUrlTail = video.image480x270;
-                            title = video.title;
-                            duration = video.duration;
-                            List<Source> sources = video.sources;
-                            videoUrlTail = sources.get(0).url;
-                            mimeType = sources.get(0).mime;
-                            Log.d("videoData", title + " " + imageUrl + imageUrlTail + " " + videoUrl + videoUrlTail + " " + duration);
-
-                            //With all of the required MediaItem data collected, we can build MediaItems for cast
-                            MediaItem mediaItem = new MediaItem(new MediaItem.MediaItemBuilder(title, videoUrl+videoUrlTail, imageUrl+imageUrlTail, duration, mimeType));
-                            movies.add(mediaItem);
-                        }
-                    }
+                    buildMedia(categoryList);
                     updateUI();
-
                 }
             }
 
             @Override
             public void onFailure(Call<ApiAnswerResponse> call, Throwable t) {
                 Log.e("loadData", "error loading API" + t.getMessage());
-
             }
         });
+    }
 
+    public void buildMedia(List<Category> categories){
+        for (Category category : categories){
 
+            imageUrl = category.images;
+            videoUrl = category.hls;
+            Log.d("imgVid", imageUrl + " " + videoUrl);
+            videos = category.videos;
+            for (Video video : videos) {
+                imageUrlTail = video.image480x270;
+                title = video.title;
+                duration = video.duration;
+                List<Source> sources = video.sources;
+                videoUrlTail = sources.get(0).url;
+                mimeType = sources.get(0).mime;
+                Log.d("videoData", title + " " + imageUrl + imageUrlTail + " " + videoUrl + videoUrlTail + " " + duration);
 
+                //With all of the required MediaItem data collected, we can build MediaItems for cast
+                MediaItem mediaItem = new MediaItem(new MediaItem.MediaItemBuilder(title, videoUrl+videoUrlTail, imageUrl+imageUrlTail, duration, mimeType));
+                movies.add(mediaItem);
+            }
+        }
     }
 
     public void updateUI(){
-        adapter = new VideoListAdapter(getApplicationContext(), R.layout.movie_row, movies);
-        layoutManager = new LinearLayoutManager(MainActivity.this);
-        recyclerView = (RecyclerView) findViewById(R.id.list);
+        adapter = new VideoListAdapter(getApplicationContext(), R.layout.movie_row, movies, new CustomItemClickListener() {
+            @Override
+            public void onItemClick(View v, int position) {
+                MediaItem movie = movies.get(position);
+                MediaMetadata movieMetadata = new MediaMetadata(MediaMetadata.MEDIA_TYPE_MOVIE);
+                movieMetadata.putString("title", movie.getTitle());
+                movieMetadata.addImage(new WebImage((Uri.parse(movie.getImageUrl()))));
+                movieMetadata.putString("videoUrl", movie.getVideoUrl());
+                movieMetadata.putInt("duration", movie.getDuration());
+
+                final CastContext castContext = CastContext.getSharedInstance(getApplicationContext());
+                SessionManager sessionManager = castContext.getSessionManager();
+                CastOptionsProvider castOptionsProvider = new CastOptionsProvider();
+                castOptionsProvider.getCastOptions(getApplicationContext());
+
+                castSession = sessionManager.getCurrentCastSession();
+                if (castSession != null) {
+                    MediaInfo mediaInfo = new MediaInfo.Builder(movie.getVideoUrl())
+                            .setStreamType(MediaInfo.STREAM_TYPE_BUFFERED)
+                            .setMetadata(movieMetadata)
+                            .setStreamDuration(movie.getDuration() * 1000)
+                            .setContentType("videos/mp4")
+                            .build();
+                    RemoteMediaClient remoteMediaClient = castSession.getRemoteMediaClient();
+                    remoteMediaClient.load(mediaInfo);
+                }
+                else {
+                    Toast.makeText(getApplicationContext(), "This is where the media player would be.\nPress cast button for now", Toast.LENGTH_SHORT).show();
+                }
+
+            }
+        });
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
+        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.list);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(adapter);
+
     }
 }
