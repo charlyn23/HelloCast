@@ -41,7 +41,7 @@ public class VideoListAdapter extends RecyclerView.Adapter<MovieHolder> {
         //inflate the view and return the new ViewHolder
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(this.resource, parent, false);
-        final MovieHolder movieHolder = new MovieHolder(this.context, view, onClickListener);
+        final MovieHolder movieHolder = new MovieHolder(this.context, view);
         view.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

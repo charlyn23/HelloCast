@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
     private String videoUrlTail;
     private String mimeType;
     private List<Video> videos;
-    private CustomItemClickListener customItemClickListener;
+    private MediaMetadata movieMetadata;
 
 
     /* SessionManagerListener monitors sessions events (creation, suspension, resumption, termination)
@@ -62,35 +62,14 @@ public class MainActivity extends AppCompatActivity {
      */
     private CastSession castSession;
     private SessionManager sessionManager;
-    private MSessionManagerListener sessionManagerListener;
     private VideoListAdapter adapter;
     private ArrayList<MediaItem> movies = new ArrayList<>();
     private ApiService service;
-
-    private class MSessionManagerListener extends SimpleSessionManagerListener {
-
-        @Override
-        public void onSessionStarted(Session session, String s) {
-            super.onSessionStarted(session, s);
-        }
-
-        @Override
-        public void onSessionEnded(Session session, int i) {
-            super.onSessionEnded(session, i);
-        }
-
-        @Override
-        public void onSessionResumed(Session session, boolean b) {
-            super.onSessionResumed(session, b);
-        }
-    }
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        sessionManagerListener = new MSessionManagerListener();
         castContext = CastContext.getSharedInstance(getApplicationContext());
         sessionManager = castContext.getSessionManager();
         service = ApiUtils.getApiService();
@@ -114,7 +93,6 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onResume() {
-        sessionManager.addSessionManagerListener(sessionManagerListener);
         if (castSession != null) {
             castSession = sessionManager.getCurrentCastSession();
         }
@@ -124,7 +102,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        sessionManager.removeSessionManagerListener(sessionManagerListener);
         castSession = null;
     }
 
@@ -182,7 +159,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(View v, int position) {
                 MediaItem movie = movies.get(position);
-                MediaMetadata movieMetadata = new MediaMetadata(MediaMetadata.MEDIA_TYPE_MOVIE);
+                movieMetadata = new MediaMetadata(MediaMetadata.MEDIA_TYPE_MOVIE);
                 movieMetadata.putString("title", movie.getTitle());
                 movieMetadata.addImage(new WebImage((Uri.parse(movie.getImageUrl()))));
                 movieMetadata.putString("videoUrl", movie.getVideoUrl());
@@ -195,14 +172,7 @@ public class MainActivity extends AppCompatActivity {
 
                 castSession = sessionManager.getCurrentCastSession();
                 if (castSession != null) {
-                    MediaInfo mediaInfo = new MediaInfo.Builder(movie.getVideoUrl())
-                            .setStreamType(MediaInfo.STREAM_TYPE_BUFFERED)
-                            .setMetadata(movieMetadata)
-                            .setStreamDuration(movie.getDuration() * 1000)
-                            .setContentType("videos/mp4")
-                            .build();
-                    RemoteMediaClient remoteMediaClient = castSession.getRemoteMediaClient();
-                    remoteMediaClient.load(mediaInfo);
+                    buildMediaInfo(movie, movieMetadata, castSession);
                 }
                 else {
                     Toast.makeText(getApplicationContext(), "This is where the media player would be.\nPress cast button for now", Toast.LENGTH_SHORT).show();
@@ -210,11 +180,24 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+
+        //set adapter now that media list is populated
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.list);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(adapter);
 
+    }
+
+    public static void buildMediaInfo(MediaItem movie, MediaMetadata movieMetadata, CastSession castSession){
+        MediaInfo mediaInfo = new MediaInfo.Builder(movie.getVideoUrl())
+                .setStreamType(MediaInfo.STREAM_TYPE_BUFFERED)
+                .setMetadata(movieMetadata)
+                .setStreamDuration(movie.getDuration() * 1000)
+                .setContentType("videos/mp4")
+                .build();
+        RemoteMediaClient remoteMediaClient = castSession.getRemoteMediaClient();
+        remoteMediaClient.load(mediaInfo);
     }
 }
