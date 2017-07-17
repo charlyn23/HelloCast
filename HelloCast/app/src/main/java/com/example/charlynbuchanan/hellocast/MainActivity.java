@@ -54,6 +54,7 @@ public class MainActivity extends AppCompatActivity {
     private String mimeType;
     private List<Video> videos;
     private MediaMetadata movieMetadata;
+    private MediaInfo mediaInfo;
 
 
     /* SessionManagerListener monitors sessions events (creation, suspension, resumption, termination)
@@ -181,7 +182,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        //set adapter now that media list is populated
+        //set adapter now that media list is populatedup
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.list);
         recyclerView.setHasFixedSize(true);
@@ -190,8 +191,8 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public static void buildMediaInfo(MediaItem movie, MediaMetadata movieMetadata, CastSession castSession){
-        MediaInfo mediaInfo = new MediaInfo.Builder(movie.getVideoUrl())
+    public MediaInfo buildMediaInfo(MediaItem movie, MediaMetadata movieMetadata, CastSession castSession){
+         mediaInfo = new MediaInfo.Builder(movie.getVideoUrl())
                 .setStreamType(MediaInfo.STREAM_TYPE_BUFFERED)
                 .setMetadata(movieMetadata)
                 .setStreamDuration(movie.getDuration() * 1000)
@@ -199,5 +200,8 @@ public class MainActivity extends AppCompatActivity {
                 .build();
         RemoteMediaClient remoteMediaClient = castSession.getRemoteMediaClient();
         remoteMediaClient.load(mediaInfo);
+
+        return mediaInfo;
     }
+
 }

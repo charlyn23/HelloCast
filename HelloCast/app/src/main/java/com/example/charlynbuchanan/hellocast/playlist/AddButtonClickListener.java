@@ -7,6 +7,6 @@ import android.view.View;
  */
 
 public interface AddButtonClickListener {
-    public void addButtonClicked();
+    public void addButtonClicked(View v, int position);
 
 }
